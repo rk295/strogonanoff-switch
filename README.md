@@ -17,8 +17,8 @@ Which is nicer than having to remember the channel and button numbers. It also r
 
 Another simple wrapper which connects to a mqtt broker and subscribes to a specific topic. Then it sits there looking for messages of the format:
 
-``
-`{"action": "off", "switch": "spareroom"}'
+```
+'{"action": "off", "switch": "spareroom"}'
 ```
 
 This is intended to make it easier to communicate with the Pi from remote machines. To test this you can use mosquitto_sub:
