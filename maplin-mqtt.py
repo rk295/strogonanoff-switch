@@ -66,7 +66,7 @@ def on_message(client, userdata, message):
     action  = data['action']
     channel = switches[data['switch']]['channel']
     button  = switches[data['switch']]['button']
-    print "%s action=%s channel=%s button=%s" % (timestamp, action, channel, button)
+    print "%s switch=%s channel=%s button=%s action=%s" % (timestamp, data['switch'], channel, button, action)
 
     runcmd(channel, button, action)
 
