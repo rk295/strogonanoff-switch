@@ -3,13 +3,14 @@
 
 import sys
 import json
+import time
 import datetime
 import paho.mqtt.client as paho
 from subprocess import Popen, PIPE
 
 """ hostname and topic of MQTT """
 hostname = 'trin'
-topic = 'foo/bar'
+topic = 'rooms/toggle'
 
 """ Master lookup table of friendly names to channel/button"""
 switches = { 
@@ -32,12 +33,19 @@ def runcmd(channel, button, action):
 
     # TODO: Figure out if a user can be given privs to access /dev/mem
 
+    timestamp = datetime.datetime.now()
+
     cmd = ["/usr/bin/sudo", "/usr/local/bin/strogonanoff_sender.py", "-c", str(channel), "-b", str(button), action]
     try:
+        print "%s running channel=%s button=%s action=%s" % (timestamp, str(channel), str(button), action)
         p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    except Exception, e:
-        print("error:  %s" % e.strerror)
-        print("failed to run command: \"%s\"" % ' '.join(command))
+        print "%s sleeping 2" % timestamp
+        time.sleep(2)
+        print "%s running channel=%s button=%s action=%s" % (timestamp, str(channel), str(button), action)
+        p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    except Exception as e:
+        print("%s error:  %s" % (timestamp, e.strerror))
+        print("%s failed to run command: \"%s\"" % (timestamp, ' '.join(command)))
     
 
 
@@ -59,23 +67,59 @@ def on_message(client, userdata, message):
         print "%s failed to parse json. message=%s" % (timestamp, message.payload)
         return False
 
-    if data['switch'] not in switches:
-        print "%s switch (%s) not found" % (timestamp, data['switch'])
-        return False
+    # Check if either of the two valid strings are in the message
+    if data.get('switch') and data.get('action'):
 
-    action  = data['action']
-    channel = switches[data['switch']]['channel']
-    button  = switches[data['switch']]['button']
-    print "%s switch=%s channel=%s button=%s action=%s" % (timestamp, data['switch'], channel, button, action)
+        if data['switch'] not in switches:
+            print "%s switch (%s) not found" % (timestamp, data['switch'])
+            return False
 
+        if data['action'] != "on" and data['action'] != "off":
+            print "%s action (%s) is not valid" % (timestamp, data['action'])
+            return False
+
+        action  = data['action']
+        channel = switches[data['switch']]['channel']
+        button  = switches[data['switch']]['button']
+
+        print "%s switch=%s channel=%s button=%s action=%s" % (timestamp, data['switch'], channel, button, action)
+
+    elif data.get('channel') and data.get('button'):
+
+        if data['action'] != "on" and data['action'] != "off":
+            print "%s action (%s) is not valid" % (timestamp, data['action'])
+            return False
+
+        action  = data['action']
+        channel = data['channel']
+        button  = data['button']
+
+        print "%s channel=%s button=%s action=%s" % (timestamp, channel, button, action)
+
+    else:
+        print "%s failed to parse message=%s" % (timestamp, data)
+        
     runcmd(channel, button, action)
+
+    
+def on_connect(client, userdata, rc):
+    timestamp = datetime.datetime.now()
+    print "%s connected with result code=%s " % (timestamp, str(rc))
 
 
 if __name__ == "__main__":
 
     mqttc = paho.Client()
     mqttc.on_message = on_message
-    mqttc.connect(hostname)
+    mqttc.on_connect = on_connect
+
+    timestamp = datetime.datetime.now()
+
+    try:
+        mqttc.connect(hostname)
+    except Exception as e:
+        print "%s failed to connect: %s" % (timestamp, e)
+
     mqttc.subscribe(topic)
 
     while mqttc.loop() == 0:
