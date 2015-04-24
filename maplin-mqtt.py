@@ -5,7 +5,7 @@ import sys
 import json
 import time
 import datetime
-iport paho.mqtt.client as paho
+import paho.mqtt.client as paho
 from subprocess import Popen, PIPE
 
 """ hostname and topic of MQTT """
