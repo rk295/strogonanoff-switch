@@ -12,6 +12,9 @@ from subprocess import Popen, PIPE
 """ hostname and topic of MQTT """
 hostname = os.getenv('MQTT_HOST')
 topic = os.getenv('MQTT_TOPIC')
+""" Optional username and password for MQTT """
+username = os.getenv('MQTT_USERNAME', None)
+password = os.getenv('MQTT_PASSWORD', None)
 
 """ Master lookup table of friendly names to channel/button"""
 switches = { 
@@ -110,11 +113,16 @@ def on_connect(client, userdata, rc):
 
 if __name__ == "__main__":
 
+    timestamp = datetime.datetime.now()
+
     mqttc = paho.Client()
     mqttc.on_message = on_message
     mqttc.on_connect = on_connect
-
-    timestamp = datetime.datetime.now()
+    if username is not None and password is not None:
+        print "%s connected to MQTT with authentication" % timestamp
+        mqttc.username_pw_set(username, password)
+    else:
+        print "%s connected to MQTT without authentication" % timestamp
 
     try:
         mqttc.connect(hostname)
