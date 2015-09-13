@@ -4,13 +4,14 @@
 import sys
 import json
 import time
+import os
 import datetime
 import paho.mqtt.client as paho
 from subprocess import Popen, PIPE
 
 """ hostname and topic of MQTT """
-hostname = 'trin'
-topic = 'rooms/toggle'
+hostname = os.getenv('MQTT_HOST')
+topic = os.getenv('MQTT_TOPIC')
 
 """ Master lookup table of friendly names to channel/button"""
 switches = { 
