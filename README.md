@@ -34,3 +34,16 @@ Which should result in something like the following being printed on stdout of t
 ```
 
 And you never know, channel 3, button 1 ***might*** have just turned off :)
+
+### Configuration
+
+Takes the following mandatory environment variables:
+
+* `MQTT_HOST` Host to connect to
+* `MQTT_TOPIC` MQTT to subscribe to
+
+And also takes the following optional variables
+
+* `MQTT_USERNAME` MQTT Username for the connection
+* `MQTT_PASSWORD` MQTT Password for the connection
+
