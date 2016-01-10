@@ -1,0 +1,40 @@
+{
+    "rooms": {
+        "Living Room": {
+            "channel": 4,
+            "button": 1
+        },
+        "Tank": {
+            "channel": 4,
+            "button": 2
+        },
+        "Sofa": {
+            "channel": 4,
+            "button": 3
+        },
+        "Outside": {
+            "channel": 4,
+            "button": 4
+        },
+        "OurRoom": {
+            "channel": 3,
+            "button": 2
+        },
+        "Air Pump": {
+            "channel": 3,
+            "button": 3
+        },
+        "Shelves": {
+            "channel": 3,
+            "button": 4
+        },
+        "Hall": {
+            "channel": 2,
+            "button": 1
+        },
+        "Outside Christmas Lights": {
+            "channel": 2,
+            "button": 2
+        }
+    }
+}
