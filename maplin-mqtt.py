@@ -5,9 +5,18 @@ import sys
 import json
 import time
 import os
+import logging
 import datetime
 import paho.mqtt.client as paho
 from subprocess import Popen, PIPE
+
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+                    datefmt='%m-%d %H:%M')
+
+logger = logging.getLogger(os.path.basename(__file__))
+
+logger.debug('Starting...')
 
 """ hostname and topic of MQTT """
 hostname = os.getenv('MQTT_HOST')
@@ -29,21 +38,20 @@ def runcmd(channel, button, action):
 
     sleep_time = 1
     loops = 2
-    timestamp = datetime.datetime.now()
 
     cmd = ["/usr/bin/sudo", "/usr/local/bin/strogonanoff_sender.py",
            "-c", str(channel), "-b", str(button), action]
     try:
         for i in range(loops):
-            print "%s running channel=%s button=%s action=%s" % (timestamp, str(channel), str(button), action)
-            print "%s running cmd=%s" % (timestamp, cmd)
+            logging.debug("running channel=%s button=%s action=%s" %
+                          (str(channel), str(button), action))
+            logging.debug("running cmd=%s" % cmd)
             p = Popen(cmd, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-            print "%s sleeping %d" % (timestamp, sleep_time)
+            logging.debug("sleeping %d" % sleep_time)
             time.sleep(sleep_time)
     except Exception as e:
-        print("%s error:  %s" % (timestamp, e.strerror))
-        print("%s failed to run command: \"%s\"" %
-              (timestamp, ' '.join(command)))
+        logging.error("error:  %s" % e.strerror)
+        logging.error("failed to run command: \"%s\"" % ' '.join(command))
 
 
 def on_message(client, userdata, message):
@@ -59,32 +67,29 @@ def on_message(client, userdata, message):
     timestamp = datetime.datetime.now()
 
     if switches is None:
-        print "%s not configured yet, ignoring request" % (timestamp)
+        logging.debug("not configured yet, ignoring request")
         return False
 
     try:
         data = json.loads(message.payload)
     except:
-        print "%s failed to parse json. message=%s" % (timestamp, message.payload)
+        logging.debug("failed to parse json. message=%s" % message.payload)
         return False
 
-    # Check if either of the two valid strings are in the message
-    # Changing this to only accept messages of the format:
-    # '{ "switch": "Sofa","action": "off"}'
-
     if data['switch'] not in switches:
-        print "%s switch (%s) not found" % (timestamp, data['switch'])
+        logging.debug("switch (%s) not found" % data['switch'])
         return False
 
     if data['action'] != "on" and data['action'] != "off":
-        print "%s action (%s) is not valid" % (timestamp, data['action'])
+        logging.debug("action (%s) is not valid" % data['action'])
         return False
 
     action = data['action']
     channel = switches[data['switch']]['channel']
     button = switches[data['switch']]['button']
 
-    print "%s switch=%s channel=%s button=%s action=%s" % (timestamp, data['switch'], channel, button, action)
+    logging.debug("switch=%s channel=%s button=%s action=%s" %
+                  (data['switch'], channel, button, action))
 
     runcmd(channel, button, action)
 
@@ -94,23 +99,23 @@ def on_config(client, userdata, message):
     global switches
 
     timestamp = datetime.datetime.now()
-    print "%s doing some config stuff...." % (timestamp)
+    logging.debug("doing some config stuff....")
 
     try:
-        print "%s parsing json. message=%s" % (timestamp, message.payload)
+        logging.debug("parsing json. message=%s" % message.payload)
         data = json.loads(message.payload)
     except:
-        print "%s failed to parse json. message=%s" % (timestamp, message.payload)
+        logging.debug("failed to parse json. message=%s" % message.payload)
 
         return False
 
     switches = data['rooms']
-    print "%s configured correctly" % timestamp
+    logging.debug("configured correctly")
 
 
 def on_connect(client, userdata, rc):
     timestamp = datetime.datetime.now()
-    print "%s connected with result code=%s " % (timestamp, str(rc))
+    logging.debug("connected with result code=%s " % str(rc))
 
 
 if __name__ == "__main__":
@@ -126,17 +131,17 @@ if __name__ == "__main__":
 
     mqttc.on_connect = on_connect
     if username is not None and password is not None:
-        print "%s connected to MQTT with authentication" % timestamp
+        logging.debug("connected to MQTT with authentication")
         mqttc.username_pw_set(username, password)
     else:
-        print "%s connected to MQTT without authentication" % timestamp
+        logging.debug("connected to MQTT without authentication")
 
     try:
         mqttc.connect(hostname)
     except Exception as e:
-        print "%s failed to connect: %s" % (timestamp, e)
+        logging.debug("failed to connect: %s" % e)
 
-    print "%s subscribing to topic: %s" % (timestamp, topic_wildcard)
+    logging.debug("subscribing to topic: %s" % topic_wildcard)
     mqttc.subscribe(topic_wildcard)
 
     while mqttc.loop() == 0:
