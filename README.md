@@ -1,49 +1,53 @@
 # Maplins switch
 
-Some of the code I've hacked together while playing with the [Maplin remote](http://www.maplin.co.uk/p/remote-controlled-mains-sockets-5-pack-n38hn) 
+Some of the code I've hacked together while playing with the [Maplin remote](http://www.maplin.co.uk/p/remote-controlled-mains-sockets-5-pack-n38hn)
 switches and my [Raspberry Pi](http://www.raspberrypi.org/).
-
-## switch.py
-
-This is a simple wrapper script to [Raspberry Strogonanoff](https://github.com/dmcg/raspberry-strogonanoff) it allows me to (for example) say things like:
-
-```
-% switch.py -s tank -a on
-```
-
-Which is nicer than having to remember the channel and button numbers. It also runs the sudo for you.
 
 ## maplin-mqtt.py
 
-Another simple wrapper which connects to a mqtt broker and subscribes to a specific topic. Then it sits there looking for messages of the format:
+This is the main script, it is designed to connect to MQTT and wait for messages requesting a switch is turned on or off. It is designed to configure itself to know about all possible switches. It does this by connecting to a topic on MQTT, where it expects to find a JSON document which defines all switches. The format of that JSON document should be as shown below:
+
+```
+{
+    "rooms": {
+        "Tank": {
+            "channel": 4,
+            "button": 2
+        },
+        "Living Room": {
+            "channel": 4,
+            "button": 1
+        }
+}
+```
+
+It can contain as many switches as you like.
+
+The format of messages it expects to receive is:
 
 ```
 '{"action": "off", "switch": "spareroom"}'
 ```
 
-This is intended to make it easier to communicate with the Pi from remote machines. To test this you can use mosquitto_sub:
+The value of `switch` must match one of the rooms defined in the configuration JSON document.
 
-```
-% mosquitto_pub -h trin -t foo/bar -m '{"action": "off", "switch": "spareroom"}'
-```
-
-Which should result in something like the following being printed on stdout of the maplin-mqtt.py script:
-
-```
-2014-12-16 22:22:10.149430 action=off channel=3 button=1
-```
-
-And you never know, channel 3, button 1 ***might*** have just turned off :)
+The script is designed to be run as a daemon, from [supervisorD](http://supervisord.org/) or something similar, as a result it logs to standard out, expecting something else to rotate those logs.
 
 ### Configuration
 
 Takes the following mandatory environment variables:
 
 * `MQTT_HOST` Host to connect to
-* `MQTT_TOPIC` MQTT to subscribe to
+* `MQTT_TOPIC` MQTT the base topic to subscribe to, see note below.
 
 And also takes the following optional variables
 
 * `MQTT_USERNAME` MQTT Username for the connection
 * `MQTT_PASSWORD` MQTT Password for the connection
 
+#### MQTT Topic note
+
+The script actually uses two topics on the broker, as a result, the topic defined in the `MQTT_TOPIC` environment variable is actually the `base` topic (which must end in a trailing forward slash). It then connects to two topics under that:
+
+* `MQTT_TOPIC/switches` - This is the topic where it expects to find the configuration JSON.
+* `MQTT_TOPIC/toggle` - This is the topic where it listens for requests to turn switches on or off.
