@@ -1,0 +1,20 @@
+--- 
+- 
+  name: Hall
+  on:
+    - 21:17
+  off:
+    - 21:18
+-
+  name: OurRoom
+  on:
+    - 21:43
+    - 21:40
+  off:
+    - 21:22
+-
+  name: Tank
+  on:
+    - 16:00
+  off:
+    - 23:00
