@@ -69,36 +69,22 @@ def on_message(client, userdata, message):
         return False
 
     # Check if either of the two valid strings are in the message
-    if data.get('switch') and data.get('action'):
+    # Changing this to only accept messages of the format:
+    # '{ "switch": "Sofa","action": "off"}'
 
-        if data['switch'] not in switches:
-            print "%s switch (%s) not found" % (timestamp, data['switch'])
-            return False
+    if data['switch'] not in switches:
+        print "%s switch (%s) not found" % (timestamp, data['switch'])
+        return False
 
-        if data['action'] != "on" and data['action'] != "off":
-            print "%s action (%s) is not valid" % (timestamp, data['action'])
-            return False
+    if data['action'] != "on" and data['action'] != "off":
+        print "%s action (%s) is not valid" % (timestamp, data['action'])
+        return False
 
-        action = data['action']
-        channel = switches[data['switch']]['channel']
-        button = switches[data['switch']]['button']
+    action = data['action']
+    channel = switches[data['switch']]['channel']
+    button = switches[data['switch']]['button']
 
-        print "%s switch=%s channel=%s button=%s action=%s" % (timestamp, data['switch'], channel, button, action)
-
-    elif data.get('channel') and data.get('button'):
-
-        if data['action'] != "on" and data['action'] != "off":
-            print "%s action (%s) is not valid" % (timestamp, data['action'])
-            return False
-
-        action = data['action']
-        channel = data['channel']
-        button = data['button']
-
-        print "%s channel=%s button=%s action=%s" % (timestamp, channel, button, action)
-
-    else:
-        print "%s failed to parse message=%s" % (timestamp, data)
+    print "%s switch=%s channel=%s button=%s action=%s" % (timestamp, data['switch'], channel, button, action)
 
     runcmd(channel, button, action)
 
