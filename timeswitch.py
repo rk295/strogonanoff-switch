@@ -10,10 +10,12 @@ import os
 import logging
 import schedule
 import json
+import ephem
+import math
 import paho.mqtt.publish as publish
 
 logging.basicConfig(level=logging.DEBUG,
-                    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
+                    format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',  # noqa
                     datefmt='%m-%d %H:%M')
 
 logger = logging.getLogger(os.path.basename(__file__))
@@ -26,7 +28,8 @@ def shSigInt(signal, frame):
 
 
 class Socket(object):
-    """Class to represent a socket, storing the on and off times and the name"""
+
+    """Class to represent a socket, storing the on/off times and the name"""
 
     def __init__(self, **socket):
 
@@ -38,6 +41,7 @@ class Socket(object):
 
 
 class Config(object):
+
     """Class to represent the configuration file"""
 
     def __init__(self):
@@ -82,6 +86,7 @@ class Config(object):
 
 
 class MQTT(object):
+
     """ Simple class to represent our connection to MQTT"""
 
     def __init__(self):
@@ -115,6 +120,61 @@ class MQTT(object):
         publish.single(self.topic, **kwargs)
 
 
+class sun(object):
+
+    """Class to represent things like 'sunrise'"""
+    TIME_FORMAT = '%H:%M:%S'
+
+    def __init__(self):
+        self.radians = lambda d: d * math.pi / 180
+        self.local = lambda d: ephem.localtime(d)
+        self.sun = ephem.Sun()
+        self.obs = ephem.Observer()
+
+        logger.debug("Creating sun object")
+        pass
+
+    def config(self, coords):
+        self.obs.lat, self.obs.lon = map(self.radians, map(
+            float, coords.split(',')))
+        logger.debug("Setting coords to:%s" % coords)
+
+    def configured(self):
+        """Returns true if this object has been configured"""
+        if self.coords is None:
+            return False
+        else:
+            return True
+
+    def _calculate(self, state, date, horizon='0'):
+        obs = self.obs
+        obs.date = date
+        obs.horizon = horizon
+
+        if state == 'rising':
+            value = self.local(obs.next_rising(self.sun)).strftime(
+                self.TIME_FORMAT)
+        elif state == 'setting':
+            value = self.local(obs.next_setting(self.sun)).strftime(
+                self.TIME_FORMAT)
+        else:
+            return False
+
+        return value
+
+    def sunrise(self, date=date.today()):
+        return self._calculate('rising', date)
+
+    def sunset(self, date=date.today()):
+        return self._calculate('setting', date)
+
+    def dusk(self, date=date.today()):
+        return self._calculate('setting', date, '-6')
+
+    def dawn(self, date=date.today()):
+        return self._calculate('rising', date, '-6')
+
+
 def sendCommand(socket, action):
     """function to actually send a message off to MQTT"""
 
@@ -126,9 +186,23 @@ def sendCommand(socket, action):
 def setSchedules(name, action, times):
     """For all the times defined in 'times' set a schedule"""
 
+    today = date.today()
+
     for time in times:
-        logger.info("Setting job for %s %s at %s" % (name, action, time))
-        schedule.every().day.at(time).do(sendCommand, name, action)
+        if time == "dawn":
+            actual_time = sun_times.dawn(today)
+        elif time == "sunrise":
+            actual_time = sun_times.sunrise(today)
+        elif time == "sunset":
+            actual_time = sun_times.sunset(today)
+        elif time == "dusk":
+            actual_time = sun_times.dusk(today)
+        else:
+            actual_time = time
+
+        logger.info("Setting job %s %s at %s" % (name, action, actual_time))
+        # Slice the actual time here because schedule doesn't like seconds
+        schedule.every().day.at(actual_time[:5]).do(sendCommand, name, action)
 
 
 def createSchedules(sockets):
@@ -154,6 +228,12 @@ def newDay(day):
         logger.debug(
             "Detected date change, old date=%d new date=%d" % (day, newDay))
         day = newDay
+
+        logger.debug("Dawn: %s" % sun_times.dawn())
+        logger.debug("Sunrise: %s" % sun_times.sunrise())
+        logger.debug("Sunset: %s" % sun_times.sunset())
+        logger.debug("Dusk: %s" % sun_times.dusk())
+
         logger.info("New day, clearing schedule")
         createSchedules(config.sockets)
 
@@ -172,6 +252,13 @@ if __name__ == '__main__':
     mqtt_user = os.getenv('MQTT_USER', None)
     mqtt_password = os.getenv('MQTT_PASSWORD', None)
 
+    # Optional coodinates, if you want to support 'sunrise' and the like
+    # in time schedules.
+    coords = os.getenv('COORDS', None)
+
+    sun_times = sun()
+    sun_times.config(coords)
+
     # Create a MQTT object to represet out connection to the broker
     mqtt = MQTT()
     mqtt.config(mqtt_topic,
@@ -179,6 +266,7 @@ if __name__ == '__main__':
                 mqtt_user,
                 mqtt_password)
 
+    today = date.today()
     lastDay = date.today().day
     logger.debug("Detected todays date as %d" % lastDay)
 
