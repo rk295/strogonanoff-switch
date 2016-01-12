@@ -1,10 +1,4 @@
 #!/usr/bin/env python
-"""Usage:
-  test.py --config=<file> --mqtt-host=<host> --mqtt-topic=<topic> [--mqtt-password=<password>] [--mqtt-user=<user>]
-  test.py -h | --help | --version
-"""
-
-from docopt import docopt
 
 import time
 from datetime import date
@@ -171,20 +165,25 @@ if __name__ == '__main__':
     # Nicer handling of CTRL-C
     signal.signal(signal.SIGINT, shSigInt)
 
-    arguments = docopt(__doc__)
+    ts_config = os.getenv('CONFIG')
+    mqtt_host = os.getenv('MQTT_HOST')
+    mqtt_topic = os.getenv('MQTT_TOPIC')
+    """ Optional username and password for MQTT """
+    mqtt_user = os.getenv('MQTT_USER', None)
+    mqtt_password = os.getenv('MQTT_PASSWORD', None)
 
     # Create a MQTT object to represet out connection to the broker
     mqtt = MQTT()
-    mqtt.config(arguments['--mqtt-topic'],
-                arguments['--mqtt-host'],
-                arguments.get('--mqtt-user'),
-                arguments.get('--mqtt-password'))
+    mqtt.config(mqtt_topic,
+                mqtt_host,
+                mqtt_user,
+                mqtt_password)
 
     lastDay = date.today().day
     logger.debug("Detected todays date as %d" % lastDay)
 
     config = Config()
-    config.load(arguments['--config'])
+    config.load(ts_config)
 
     createSchedules(config.sockets)
 
