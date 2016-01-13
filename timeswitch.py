@@ -48,6 +48,7 @@ class Config(object):
 
         self.sockets = []
         self.filePath = None
+        self.mtime = None
         self.file = None
         self.yaml = None
 
@@ -58,13 +59,33 @@ class Config(object):
 
         logger.debug("Config file path=%s" % path)
 
+        self.mtime = os.path.getmtime(path)
+        logger.debug("Last modification time of %s was %s" %
+                     (path, time.ctime(self.mtime)))
+
         self.filePath = path
         self._parseYaml()
+
+        # Clear the existing list of sockets
+        self.sockets = []
 
         logger.info("Found %d sockets in config" % len(self.yaml))
 
         for socket in self.yaml:
             self.sockets.append(Socket(**socket))
+
+    def updated(self):
+
+        new_mtime = os.path.getmtime(self.filePath)
+
+        if new_mtime > self.mtime:
+            logger.debug(
+                "Config file (%s) has been updated, reloading" % self.filePath)
+            self.mtime = new_mtime
+            self.load(self.filePath)
+            return True
+        else:
+            return False
 
     def _loadConfig(self):
         """Private method to actually handle the loading of the file"""
@@ -83,6 +104,9 @@ class Config(object):
             self.yaml = yaml.load(self.file, Loader=yaml.BaseLoader)
         except yaml.YAMLError as e:
             logger.error("Invalid YAML")
+
+    def get_sockets(self):
+        return self.sockets
 
 
 class MQTT(object):
@@ -273,10 +297,14 @@ if __name__ == '__main__':
     config = Config()
     config.load(ts_config)
 
-    createSchedules(config.sockets)
+    createSchedules(config.get_sockets())
 
     # Main loop
     while True:
         lastDay = newDay(lastDay)
+
+        if config.updated() is True:
+            createSchedules(config.get_sockets())
+
         schedule.run_pending()
         time.sleep(1)
