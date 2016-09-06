@@ -6,7 +6,6 @@ import json
 import time
 import os
 import logging
-import datetime
 import paho.mqtt.client as paho
 from subprocess import Popen, PIPE
 
@@ -64,8 +63,6 @@ def on_message(client, userdata, message):
     on or off.
     """
 
-    timestamp = datetime.datetime.now()
-
     if switches is None:
         logging.debug("not configured yet, ignoring request")
         return False
@@ -98,9 +95,6 @@ def on_config(client, userdata, message):
 
     global switches
 
-    timestamp = datetime.datetime.now()
-    logging.debug("doing some config stuff....")
-
     try:
         logging.debug("parsing json. message=%s" % message.payload)
         data = json.loads(message.payload)
@@ -114,13 +108,10 @@ def on_config(client, userdata, message):
 
 
 def on_connect(client, userdata, rc):
-    timestamp = datetime.datetime.now()
     logging.debug("connected with result code=%s " % str(rc))
 
 
 if __name__ == "__main__":
-
-    timestamp = datetime.datetime.now()
 
     # Bit hacky, making this global. But you know ;)
     switches = None
