@@ -273,7 +273,7 @@ if __name__ == '__main__':
     mqtt_host = os.getenv('MQTT_HOST')
     mqtt_topic = os.getenv('MQTT_TOPIC')
     """ Optional username and password for MQTT """
-    mqtt_user = os.getenv('MQTT_USER', None)
+    mqtt_user = os.getenv('MQTT_USERNAME', None)
     mqtt_password = os.getenv('MQTT_PASSWORD', None)
 
     # Optional coodinates, if you want to support 'sunrise' and the like
