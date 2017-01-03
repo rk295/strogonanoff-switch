@@ -49,7 +49,7 @@ def on_message(client, userdata, message):
         logging.debug("failed to parse json. message=%s" % message.payload)
         return False
 
-    if data['switch'] not in switches:
+    if data['switch'] not in switches['rooms']:
         logging.debug("switch (%s) not found" % data['switch'])
         return False
 
@@ -59,11 +59,8 @@ def on_message(client, userdata, message):
 
     switch = data['switch']
     action = data['action']
-    channel = switches[data['switch']]['channel']
-    button = switches[data['switch']]['button']
 
-    logging.debug("switch=%s channel=%s button=%s action=%s" %
-                  (data['switch'], channel, button, action))
+    logging.debug("switch=%s action=%s" % (data['switch'], action))
 
     update_state(switch, action)
 
@@ -80,7 +77,7 @@ def on_config(client, userdata, message):
 
         return False
 
-    switches = data['rooms']
+    switches = data
     logging.debug("configured correctly")
 
 
@@ -91,10 +88,10 @@ def on_connect(client, userdata, rc):
 def update_state(switch, action):
     logging.debug("Updating state with %s turned %s" % (switch, action))
 
-    switches[switch]['state'] = action
+    switches['rooms'][switch]['state'] = action
 
     new_config = dict()
-    new_config['rooms'] = switches
+    new_config = switches
 
     mqtt_options['retain'] = True
 
