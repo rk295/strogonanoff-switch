@@ -203,7 +203,7 @@ def sendCommand(socket, action):
     """function to actually send a message off to MQTT"""
 
     logger.info("turning socket=%s %s" % (socket, action))
-    payload = json.dumps({"switch": socket, "action": action})
+    payload = json.dumps({"switch": socket, "action": action, "source": "timeswitch"})
     mqtt.send_message(payload)
 
 
