@@ -73,7 +73,7 @@ def on_message(client, userdata, message):
         logging.debug("failed to parse json. message=%s" % message.payload)
         return False
 
-    if data['switch'] not in switches:
+    if data['switch'] not in switches['rooms']:
         logging.debug("switch (%s) not found" % data['switch'])
         return False
 
@@ -82,8 +82,8 @@ def on_message(client, userdata, message):
         return False
 
     action = data['action']
-    channel = switches[data['switch']]['channel']
-    button = switches[data['switch']]['button']
+    channel = switches['rooms'][data['switch']]['channel']
+    button = switches['rooms'][data['switch']]['button']
 
     logging.debug("switch=%s channel=%s button=%s action=%s" %
                   (data['switch'], channel, button, action))
@@ -97,13 +97,12 @@ def on_config(client, userdata, message):
 
     try:
         logging.debug("parsing json. message=%s" % message.payload)
-        data = json.loads(message.payload)
+        switches = json.loads(message.payload)
     except:
         logging.debug("failed to parse json. message=%s" % message.payload)
 
         return False
 
-    switches = data['rooms']
     logging.debug("configured correctly")
 
 
