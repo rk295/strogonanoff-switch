@@ -50,20 +50,36 @@ def on_message(client, userdata, message):
         logging.debug("failed to parse json. message=%s" % message.payload)
         return False
 
-    if data['switch'] not in switches['rooms']:
-        logging.debug("switch (%s) not found" % data['switch'])
-        return False
-
     if data['action'] != "on" and data['action'] != "off":
         logging.debug("action (%s) is not valid" % data['action'])
         return False
 
-    switch = data['switch']
+    name = data['switch']
     action = data['action']
+    source = data.get('source')
 
-    logging.debug("switch=%s action=%s" % (data['switch'], action))
+    if name in switches['rooms']:
 
-    update_state(switch, action)
+        logging.debug("switch=%s action=%s source=%s" %
+                      (name, action, source))
+
+        update_state(name, action)
+
+    elif name in switches['scenes']:
+        logging.debug("Handling scene=%s" % name)
+        switch_list = switches['scenes'][name]
+
+        logger.debug("read switch list for scene=%s as: %s" % (name, switch_list))
+
+        for switch in switch_list:
+
+            logging.debug("switch=%s action=%s source=%s scene=%s" %
+                          (switch, action, source, name))
+            update_state(switch, action)
+    else:
+        # if it isn't in rooms or scenes it isn't valid, so return
+        logging.debug("%s not found in switches or scenes" % switch_name)
+        return False
 
 
 def on_config(client, userdata, message):
