@@ -1,19 +1,55 @@
----
--
+--- 
+- 
   name: Hall
   on:
-    - 21:17
+    - sunset
   off:
-    - 21:18
--
-  name: OurRoom
-  on:
-    - dusk
-  off:
-    - 21:22
+    - 23:38
 -
   name: Tank
   on:
-    - 16:00
+    - sunset
+  off:
+    - 23:00
+-
+  name: Living Room
+  on:
+    - sunset
+  off:
+    - 23:30
+-
+  name: Sofa
+  on:
+    - sunset
+  off:
+    - 23:25
+-
+  name: Shelves
+  on:
+    - sunset
+  off:
+    - 23:25
+-
+  name: Air Pump
+  on:
+    - 10:00
+  off:
+    - 13:00
+-
+  name: Our Room
+  on:
+    - 21:00
+  off:
+    - 23:59
+-
+  name: Christmas Tree
+  on:
+    - sunset
+  off:
+    - 23:00
+-
+  name: Christmas Lights
+  on:
+    - sunset
   off:
     - 23:00
