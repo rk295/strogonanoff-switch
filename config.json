@@ -1,40 +1,71 @@
 {
     "rooms": {
-        "Living Room": {
-            "channel": 4,
-            "button": 1
-        },
-        "Tank": {
-            "channel": 4,
-            "button": 2
-        },
-        "Sofa": {
-            "channel": 4,
-            "button": 3
-        },
-        "Outside": {
-            "channel": 4,
-            "button": 4
-        },
-        "OurRoom": {
-            "channel": 3,
-            "button": 2
-        },
         "Air Pump": {
-            "channel": 3,
-            "button": 3
-        },
-        "Shelves": {
-            "channel": 3,
-            "button": 4
-        },
+            "button": 3, 
+            "channel": 3, 
+            "state": "off"
+        }, 
+        "Christmas Lights": {
+            "button": 2, 
+            "channel": 2, 
+            "state": "off"
+        }, 
+        "Christmas Tree": {
+            "button": 1, 
+            "channel": 3, 
+            "state": "on"
+        }, 
         "Hall": {
-            "channel": 2,
-            "button": 1
-        },
-        "Outside Christmas Lights": {
-            "channel": 2,
-            "button": 2
+            "button": 1, 
+            "channel": 2, 
+            "state": "on"
+        }, 
+        "Living Room": {
+            "button": 1, 
+            "channel": 4, 
+            "state": "off"
+        }, 
+        "Our Room": {
+            "button": 3, 
+            "channel": 2, 
+            "state": "off"
+        }, 
+        "Outside": {
+            "button": 4, 
+            "channel": 4, 
+            "state": "off"
+        }, 
+        "Shed Heater": {
+            "button": 2, 
+            "channel": 3, 
+            "state": "off"
+        }, 
+        "Shelves": {
+            "button": 4, 
+            "channel": 3, 
+            "state": "off"
+        }, 
+        "Sofa": {
+            "button": 3, 
+            "channel": 4, 
+            "state": "off"
+        }, 
+        "Tank": {
+            "button": 2, 
+            "channel": 4, 
+            "state": "off"
         }
+    }, 
+    "scenes": {
+        "Downstairs": [
+            "Living Room", 
+            "Sofa", 
+            "Tank", 
+            "Shelves"
+        ]
+    }, 
+    "updated": {
+        "at": "Wed Jan  4 09:15:01 GMT 2017", 
+        "by": "cli"
     }
 }
