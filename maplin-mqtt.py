@@ -31,11 +31,11 @@ password = os.getenv('MQTT_PASSWORD', None)
 def runcmd(channel, button, action):
     """Does the grunt work of calling strogonanoff_sender.py
 
-    Builds an array of strings to pass to Popen. Currently needs NOPASSWD sudo 
+    Builds an array of strings to pass to Popen. Currently needs NOPASSWD sudo
     access to interact with /dev/mem.
     """
 
-    sleep_time = 1
+    sleep_time = 2
     loops = 2
 
     cmd = ["/usr/bin/sudo", "/usr/local/bin/strogonanoff_sender.py",
@@ -54,12 +54,12 @@ def runcmd(channel, button, action):
 
 
 def on_message(client, userdata, message):
-    """Called whenever a message is received. 
+    """Called whenever a message is received.
 
     Tries to parse the message as valid json and if successful will
     try to find the switch mentioned in the json in the global lookup
     table 'switches' (defined at the top). If the switch is found it
-    will call runcmd to actually do the work of turning the switch 
+    will call runcmd to actually do the work of turning the switch
     on or off.
     """
 
@@ -73,22 +73,40 @@ def on_message(client, userdata, message):
         logging.debug("failed to parse json. message=%s" % message.payload)
         return False
 
-    if data['switch'] not in switches['rooms']:
-        logging.debug("switch (%s) not found" % data['switch'])
+    name = data.get('switch')
+    action = data.get('action')
+    source = data.get('source')
+
+    # Only 'on' and 'off' are supported
+    if action != "on" and action != "off":
+        logging.debug("action (%s) is not valid" % action)
         return False
 
-    if data['action'] != "on" and data['action'] != "off":
-        logging.debug("action (%s) is not valid" % data['action'])
+    if name in switches['rooms']:
+        channel = switches['rooms'][name]['channel']
+        button = switches['rooms'][name]['button']
+
+        logging.debug("switch=%s channel=%s button=%s action=%s source=%s" %
+                      (name, channel, button, action, source))
+
+        runcmd(channel, button, action)
+
+    elif name in switches['scenes']:
+        logging.debug("Handling scene=%s" % name)
+        switch_list = switches['scenes'][name]
+
+        for switch in switch_list:
+
+            channel = switches['rooms'][switch]['channel']
+            button = switches['rooms'][switch]['button']
+
+            logging.debug("switch=%s channel=%s button=%s action=%s source=%s scene=%s" %
+                          (name, channel, button, action, source, name))
+            runcmd(channel, button, action)
+    else:
+        # if it isn't in rooms or scenes it isn't valid, so return
+        logging.debug("%s not found in switches or scenes" % switch_name)
         return False
-
-    action = data['action']
-    channel = switches['rooms'][data['switch']]['channel']
-    button = switches['rooms'][data['switch']]['button']
-
-    logging.debug("switch=%s channel=%s button=%s action=%s" %
-                  (data['switch'], channel, button, action))
-
-    runcmd(channel, button, action)
 
 
 def on_config(client, userdata, message):
