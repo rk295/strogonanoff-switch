@@ -101,7 +101,7 @@ def on_message(client, userdata, message):
             button = switches['rooms'][switch]['button']
 
             logging.debug("switch=%s channel=%s button=%s action=%s source=%s scene=%s" %
-                          (name, channel, button, action, source, name))
+                          (switch, channel, button, action, source, name))
             runcmd(channel, button, action)
     else:
         # if it isn't in rooms or scenes it isn't valid, so return
