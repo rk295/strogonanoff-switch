@@ -9,6 +9,7 @@ import logging
 import paho.mqtt.client as paho
 import paho.mqtt.publish as publish
 from subprocess import Popen, PIPE
+from time import gmtime, strftime
 
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(name)-12s %(levelname)-8s %(message)s',
@@ -89,6 +90,9 @@ def update_state(switch, action):
     logging.debug("Updating state with %s turned %s" % (switch, action))
 
     switches['rooms'][switch]['state'] = action
+    switches['updated']['by'] = 'state.py'
+    time_stamp = strftime("%a %b %d %H:%M:%S %Z %Y", gmtime())
+    switches['updated']['at'] = time_stamp
 
     new_config = dict()
     new_config = switches
